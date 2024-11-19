@@ -1,0 +1,22 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Current File",
+      "request": "launch",
+      "mainClass": "${file}"
+    },
+    {
+      "type": "java",
+      "name": "Practica11MendozaReyesAngelEmanuel",
+      "request": "launch",
+      "mainClass": "Practica11MendozaReyesAngelEmanuel",
+      "projectName": "Practica 11 - Mendoza Reyes Angel Emanuel_a32603c7",
+      "vmArgs": "-Djava.library.path=\"C:\\Program Files\\Java\\Java3D\\1.5.1\\bin\" --add-exports=java.desktop/sun.awt=ALL-UNNAMED"
+    }
+  ]
+}
