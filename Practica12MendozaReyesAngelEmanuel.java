@@ -1,6 +1,8 @@
 import javax.swing.*;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
+import javax.vecmath.Vector3f;
+import javax.vecmath.AxisAngle4f;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,14 +13,14 @@ import com.sun.j3d.utils.geometry.Cylinder;
 import com.sun.j3d.utils.universe.SimpleUniverse;
 import com.sun.j3d.utils.image.TextureLoader;
 
-public class Practica11MendozaReyesAngelEmanuel extends JFrame {
+public class Practica12MendozaReyesAngelEmanuel extends JFrame {
     private SimpleUniverse universo;
     private BranchGroup escena;
     private TransformGroup objectoGiro;
     private Canvas3D canvas3d;
 
-    public Practica11MendozaReyesAngelEmanuel() {
-        setTitle("Practica 11 - Mendoza Reyes Angel Emanuel");
+    public Practica12MendozaReyesAngelEmanuel() {
+        setTitle("Practica 12 - Mendoza Reyes Angel Emanuel");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -98,17 +100,49 @@ public class Practica11MendozaReyesAngelEmanuel extends JFrame {
         if (tipoObjeto != null) {
             objectoGiro = new TransformGroup();
             objectoGiro.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+            objectoGiro.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
             objectoRaiz.addChild(objectoGiro);
 
             Appearance apariencia = new Appearance();
-            ColoringAttributes colorAtributos = new ColoringAttributes(new Color3f(Color.WHITE), ColoringAttributes.SHADE_FLAT);
-            apariencia.setColoringAttributes(colorAtributos);
+            Material material = new Material();
+            material.setAmbientColor(new Color3f(Color.DARK_GRAY));
+            material.setDiffuseColor(new Color3f(Color.WHITE));
+            material.setSpecularColor(new Color3f(Color.WHITE));
+            material.setShininess(20.0f);
+            apariencia.setMaterial(material);
+
+            TransformGroup tgMovimiento = new TransformGroup();
+            tgMovimiento.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+            objectoGiro.addChild(tgMovimiento);
 
             if (tipoObjeto.equals("Cubo")) {
-                objectoGiro.addChild(crearCuboConBordes(0.2f, apariencia));
+                tgMovimiento.addChild(crearCubo(0.2f, apariencia));
+                Alpha alphaMovimiento = new Alpha(-1, Alpha.INCREASING_ENABLE | Alpha.DECREASING_ENABLE, 0, 0, 4000, 0, 0, 4000, 0, 0);
+                Transform3D ejeMovimiento = new Transform3D();
+                PositionInterpolator interpoladorMovimiento = new PositionInterpolator(alphaMovimiento, tgMovimiento, ejeMovimiento, -0.5f, 0.5f);
+                interpoladorMovimiento.setSchedulingBounds(new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0));
+                objectoRaiz.addChild(interpoladorMovimiento);
+
+                Alpha alphaRotacion = new Alpha(-1, 4000);
+                RotationInterpolator rotacionAdicional = new RotationInterpolator(alphaRotacion, tgMovimiento);
+                rotacionAdicional.setSchedulingBounds(new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0));
+                objectoRaiz.addChild(rotacionAdicional);
             } else if (tipoObjeto.equals("Cilindro")) {
-                Cylinder cilindro = new Cylinder(0.2f, 0.6f, apariencia);
-                objectoGiro.addChild(cilindro);
+                tgMovimiento.addChild(new Cylinder(0.2f, 0.6f, Cylinder.GENERATE_NORMALS, apariencia));
+                Alpha alphaMovimiento = new Alpha(-1, Alpha.INCREASING_ENABLE | Alpha.DECREASING_ENABLE, 0, 0, 4000, 0, 0, 4000, 0, 0);
+                Transform3D ejeMovimiento = new Transform3D();
+                ejeMovimiento.rotX(Math.PI / 2);
+                PositionInterpolator interpoladorMovimiento = new PositionInterpolator(alphaMovimiento, tgMovimiento, ejeMovimiento, -0.5f, 0.5f);
+                interpoladorMovimiento.setSchedulingBounds(new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0));
+                objectoRaiz.addChild(interpoladorMovimiento);
+
+                Alpha alphaRotacion = new Alpha(-1, 4000);
+                RotationInterpolator rotacionAdicional = new RotationInterpolator(alphaRotacion, tgMovimiento);
+                rotacionAdicional.setSchedulingBounds(new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0));
+                Transform3D transformAxis = new Transform3D();
+                transformAxis.setRotation(new AxisAngle4f(0, 1, 0, (float) Math.PI));
+                rotacionAdicional.setTransformAxis(transformAxis);
+                objectoRaiz.addChild(rotacionAdicional);
             }
 
             if (tipoRotacion.equals("Automática")) {
@@ -128,12 +162,22 @@ public class Practica11MendozaReyesAngelEmanuel extends JFrame {
             }
         }
 
+        Color3f colorAmbiente = new Color3f(Color.DARK_GRAY);
+        AmbientLight luzAmbiente = new AmbientLight(colorAmbiente);
+        luzAmbiente.setInfluencingBounds(new BoundingSphere(new Point3d(0, 0, 0), 100));
+        objectoRaiz.addChild(luzAmbiente);
+
+        Color3f colorLuz = new Color3f(Color.WHITE);
+        Vector3f dirLuz = new Vector3f(-1.0f, -1.0f, -4.0f);
+        DirectionalLight luz = new DirectionalLight(colorLuz, dirLuz);
+        luz.setInfluencingBounds(new BoundingSphere(new Point3d(0, 0, 0), 100));
+        objectoRaiz.addChild(luz);
+
         return objectoRaiz;
     }
 
-    private Node crearCuboConBordes(float tamaño, Appearance apariencia) {
-        TransformGroup tg = new TransformGroup();
-        QuadArray cubo = new QuadArray(24, QuadArray.COORDINATES | QuadArray.COLOR_3);
+    private Node crearCubo(float tamaño, Appearance apariencia) {
+        QuadArray cubo = new QuadArray(24, QuadArray.COORDINATES | QuadArray.NORMALS);
         float[] coords = {
             -tamaño, -tamaño, tamaño,  tamaño, -tamaño, tamaño,
              tamaño,  tamaño, tamaño, -tamaño,  tamaño, tamaño,
@@ -150,43 +194,19 @@ public class Practica11MendozaReyesAngelEmanuel extends JFrame {
         };
         cubo.setCoordinates(0, coords);
 
-        Color3f[] colors = new Color3f[24];
-        for (int i = 0; i < 24; i++) {
-            colors[i] = new Color3f(Color.WHITE);
+        Vector3f[] normals = new Vector3f[24];
+        for (int i = 0; i < 24; i += 4) {
+            Vector3f normal = new Vector3f(coords[i * 3], coords[i * 3 + 1], coords[i * 3 + 2]);
+            normal.normalize();
+            normals[i] = normal;
+            normals[i + 1] = normal;
+            normals[i + 2] = normal;
+            normals[i + 3] = normal;
         }
-        cubo.setColors(0, colors);
+        cubo.setNormals(0, normals);
 
         Shape3D shapeCubo = new Shape3D(cubo, apariencia);
-        tg.addChild(shapeCubo);
-
-        LineArray lineas = new LineArray(24, LineArray.COORDINATES);
-        float[] coordsLineas = {
-            -tamaño, -tamaño, -tamaño,  tamaño, -tamaño, -tamaño,
-             tamaño, -tamaño, -tamaño,  tamaño,  tamaño, -tamaño,
-             tamaño,  tamaño, -tamaño, -tamaño,  tamaño, -tamaño,
-            -tamaño,  tamaño, -tamaño, -tamaño, -tamaño, -tamaño,
-            -tamaño, -tamaño,  tamaño,  tamaño, -tamaño,  tamaño,
-             tamaño, -tamaño,  tamaño,  tamaño,  tamaño,  tamaño,
-             tamaño,  tamaño,  tamaño, -tamaño,  tamaño,  tamaño,
-            -tamaño,  tamaño,  tamaño, -tamaño, -tamaño,  tamaño,
-            -tamaño, -tamaño, -tamaño, -tamaño, -tamaño,  tamaño,
-             tamaño, -tamaño, -tamaño,  tamaño, -tamaño,  tamaño,
-             tamaño,  tamaño, -tamaño,  tamaño,  tamaño,  tamaño,
-            -tamaño,  tamaño, -tamaño, -tamaño,  tamaño,  tamaño
-        };
-        lineas.setCoordinates(0, coordsLineas);
-
-        Appearance aparienciaLineas = new Appearance();
-        ColoringAttributes colorAtributosLineas = new ColoringAttributes(new Color3f(Color.BLACK), ColoringAttributes.SHADE_FLAT);
-        aparienciaLineas.setColoringAttributes(colorAtributosLineas);
-        LineAttributes lineAttributes = new LineAttributes();
-        lineAttributes.setLineWidth(2.0f);
-        aparienciaLineas.setLineAttributes(lineAttributes);
-
-        Shape3D shapeLineas = new Shape3D(lineas, aparienciaLineas);
-        tg.addChild(shapeLineas);
-
-        return tg;
+        return shapeCubo;
     }
 
     public void limpiarEscena() {
@@ -198,7 +218,7 @@ public class Practica11MendozaReyesAngelEmanuel extends JFrame {
     public static void main(String[] args) {
         System.setProperty("sun.awt.noerasebackground", "true");
         SwingUtilities.invokeLater(() -> {
-            Practica11MendozaReyesAngelEmanuel frame = new Practica11MendozaReyesAngelEmanuel();
+            Practica12MendozaReyesAngelEmanuel frame = new Practica12MendozaReyesAngelEmanuel();
             frame.setVisible(true);
         });
     }

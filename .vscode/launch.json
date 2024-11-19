@@ -6,6 +6,14 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Practica12MendozaReyesAngelEmanuel",
+      "request": "launch",
+      "mainClass": "Practica12MendozaReyesAngelEmanuel",
+      "projectName": "Practica 11 - Mendoza Reyes Angel Emanuel_a32603c7",
+      "vmArgs": "-Djava.library.path=\"C:\\Program Files\\Java\\Java3D\\1.5.1\\bin\" --add-exports=java.desktop/sun.awt=ALL-UNNAMED"
+    },
+    {
+      "type": "java",
       "name": "Current File",
       "request": "launch",
       "mainClass": "${file}"
